@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Wallet Manager & Calculations Voice Chatbot</title>
+    
+    <style>
+        /* CORE BASE & PREMIUM LIGHT MODE THEME */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        body {
+            background: #f8fafc;
+            color: #1e293b;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .app-container {
+            width: 100%;
+            max-w: 1100px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 28px;
+            padding-bottom: 80px;
+        }
+        @media (min-width: 850px) {
+            .app-container {
+                grid-template-columns: 5fr 7fr;
+            }
+        }
+
+        /* CARDS & PANELS LOOK */
+        .glass-panel {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.15);
+        }
+        .panel-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* VIBRANT GRADIENT CARD FOR WALLET */
+        .wallet-card {
+            background: linear-gradient(135deg, #4338ca 0%, #6366f1 50%, #818cf8 100%);
+            border-radius: 24px;
+            padding: 24px;
+            color: white;
+            box-shadow: 0 20px 30px -10px rgba(99, 102, 241, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .wallet-card:hover {
+            transform: translateY(-4px) scale(1.01);
+        }
+        .wallet-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #e0e7ff;
+            margin-bottom: 20px;
+        }
+        .balance-value {
+            font-size: 36px;
+            font-weight: 800;
+        }
+        .wallet-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .stat-label { font-size: 10px; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+        .stat-inc-label { color: #a7f3d0; }
+        .stat-exp-label { color: #fecaca; }
+        .stat-val { font-size: 18px; font-weight: 700; }
+
+        /* BEAUTIFUL & COLORFUL BUTTONS */
+        .btn-colorful {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white; border: none; border-radius: 12px; padding: 14px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 8px 16px -4px rgba(99, 102, 241, 0.5);
+            transition: all 0.3s ease; width: 100%;
+        }
+        .btn-colorful:hover { transform: translateY(-2px); filter: brightness(1.05); }
+
+        .btn-print-colorful {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            box-shadow: 0 6px 12px -3px rgba(16, 185, 129, 0.4);
+            padding: 8px 16px; font-size: 12px; border-radius: 10px;
+            color: white; border: none; cursor: pointer; font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-print-colorful:hover { transform: translateY(-2px); }
+
+        .btn-change-salary {
+            background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white; padding: 6px 12px; border-radius: 8px; cursor: pointer;
+            font-size: 11px; font-weight: 600; transition: background 0.2s;
+        }
+        .btn-change-salary:hover { background: rgba(255, 255, 255, 0.3); }
+
+        /* DETAILED LEDGER LIST */
+        .ledger-box { display: flex; flex-direction: column; max-height: 540px; }
+        .transaction-list { overflow-y: auto; margin-top: 10px; padding-right: 4px; }
+        .transaction-list::-webkit-scrollbar { width: 5px; }
+        .transaction-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        @keyframes slideRow { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .transaction-item {
+            background: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; border-radius: 14px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+            animation: slideRow 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        .item-details h4 { font-size: 14px; color: #0f172a; font-weight: 600; }
+        .item-meta { display: flex; gap: 8px; font-size: 11px; color: #64748b; margin-top: 4px; }
+        .badge { background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px; }
+        
+        .amount { font-size: 14px; font-weight: 700; }
+        .amt-inc { color: #059669; }
+        .amt-exp { color: #dc2626; }
+        .btn-delete { background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 14px; }
+        .btn-delete:hover { color: #ef4444; }
+
+        /* INPUTS styling */
+        .form-group { margin-bottom: 16px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 6px; }
+        input, select {
+            width: 100%; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px; color: #0f172a; font-size: 14px;
+        }
+        input:focus, select:focus { outline: none; border-color: #6366f1; }
+        .balance-edit-input-box { background: rgba(15, 23, 42, 0.9); border: 2px solid #818cf8; color: #fff; width: 130px; padding: 6px; border-radius: 8px; font-size: 15px; }
+
+        /* DYNAMIC VOICE CHATBOT WIDGET */
+        .bot-bubble-trigger {
+            position: fixed; right: 24px; bottom: 24px;
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+            width: 56px; height: 56px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 10px 25px rgba(244, 63, 94, 0.4);
+            cursor: pointer; z-index: 200; color: white; font-size: 20px;
+            transition: transform 0.3s;
+        }
+        .bot-bubble-trigger:hover { transform: scale(1.08) rotate(5deg); }
+        
+        .chat-container {
+            position: fixed; right: 24px; bottom: 95px;
+            width: 340px; height: 440px; background: white;
+            border-radius: 20px; border: 1px solid #e2e8f0;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
+            display: flex; flex-direction: column; overflow: hidden;
+            z-index: 200; opacity: 0; visibility: hidden; transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+        .chat-container.open { opacity: 1; visibility: visible; transform: translateY(0); }
+        .chat-header {
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+            color: white; padding: 14px; font-weight: bold; font-size: 14px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .chat-logs { flex: 1; padding: 14px; overflow-y: auto; background: #f8fafc; font-size: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 10px 14px; border-radius: 14px; max-width: 80%; line-height: 1.4; }
+        .msg.user { background: #e0e7ff; color: #3730a3; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg.bot { background: white; color: #1e293b; border: 1px solid #e2e8f0; align-self: flex-start; border-bottom-left-radius: 2px; }
+        
+        .chat-input-bar { padding: 10px; border-top: 1px solid #e2e8f0; display: flex; gap: 8px; background: white; align-items: center; }
+        .chat-input-bar input { padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; flex: 1; }
+        .btn-bot-send { background: #f43f5e; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; font-weight: bold; }
+        .btn-mic {
+            background: #e2e8f0; border: none; width: 34px; height: 34px; border-radius: 50%;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 14px; color: #475569;
+        }
+        .btn-mic.listening { background: #fecaca; color: #dc2626; animation: pulseMic 1.2s infinite; }
+        @keyframes pulseMic { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* NATIVE PRINT MODAL STYLE */
+        .modal-mask {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            display: flex; justify-content: center; align-items: center; padding: 20px; z-index: 300;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
+        }
+        .modal-mask.active { opacity: 1; visibility: visible; }
+        .modal-window { background: #fff; color: #000; width: 100%; max-width: 650px; border-radius: 16px; display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-bar { background: #f1f5f9; padding: 12px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            background: #fff;
+        }
+        .print-btn-now { background: #4f46e5; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .print-btn-close { background: #e2e8f0; color: #334155; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; }
+
+        /* PRINT SHEET LOOK */
+        .print-header { border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+        .print-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; border: 1px solid #000; padding: 10px; font-size: 12px; }
+        .print-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+        .print-table th, .print-table td { border-bottom: 1px solid #000; padding: 8px; text-align: left; }
+        .text-right { text-align: right; }
+        .hidden { display: none !important; }
+
+        @media print {
+            body { background: white !important; color: black !important; }
+            .app-container, .modal-bar, .bot-bubble-trigger, .chat-container { display: none !important; }
+            .modal-mask { position: absolute !important; background: white !important; opacity: 1 !important; visibility: visible !important; }
+            .modal-window { box-shadow: none !important; max-height: none !important; }
+            #printableLayout { display: block !important; background: white !important; color: black !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+            
+            <div class="wallet-card">
+                <div class="wallet-header">
+                    <span>Digital Wallet Tracker</span>
+                    <span style="font-weight: bold; background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 4px;">Live Report</span>
+                </div>
+                <div>
+                    <p class="balance-title">Total Closing Balance</p>
+                    <div class="balance-value-wrapper">
+                        <div id="balanceDisplayDiv" class="balance-value">₹<span id="lblBalance">25,000.00</span></div>
+                        <div id="balanceEditDiv" class="hidden">
+                            <input type="number" id="txtBaseBalanceInput" class="balance-edit-input-box" value="25000">
+                        </div>
+                        <button id="btnToggleBalance" class="btn-change-salary" onclick="toggleBalanceEdit()">Change Salary/Base</button>
+                    </div>
+                </div>
+                <div class="wallet-stats">
+                    <div>
+                        <div class="stat-label stat-inc-label">Total Inflow (+)</div>
+                        <div class="stat-val">₹<span id="lblIncome">0.00</span></div>
+                    </div>
+                    <div>
+                        <div class="stat-label stat-exp-label">Total Outflow (-)</div>
+                        <div class="stat-val">₹<span id="lblExpense">0.00</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel">
+                <div style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #0f172a;">Create Transaction Entry</div>
+                <form id="expenseForm">
+                    <div class="form-group">
+                        <label>Where did you spend? (Description)</label>
+                        <input type="text" id="txTitle" required placeholder="e.g., Shop Grocery, Electricity Bill">
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Amount (₹)</label>
+                            <input type="number" id="txAmount" required min="1" placeholder="0.00">
+                        </div>
+                        <div>
+                            <label>Type</label>
+                            <select id="txType">
+                                <option value="expense">Expense (-)</option>
+                                <option value="income">Income (+)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label>Category</label>
+                            <select id="txCategory">
+                                <option value="Food & Drinks">Food & Drinks</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Rent/Bills">Rent & Bills</option>
+                                <option value="Salary">Salary / Income</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Date</label>
+                            <input type="date" id="txDate" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-colorful">Add Transaction Log</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="glass-panel ledger-box">
+            <div class="panel-title">
+                <div>
+                    <div>Transaction Ledger</div>
+                    <div style="font-size: 11px; color: #64748b; font-weight: 400; margin-top: 2px;">Line-by-line detailed logs history</div>
+                </div>
+                <button onclick="openPrintModal()" class="btn-print-colorful">Generate Print Out</button>
+            </div>
+            <div id="ledgerContainer" class="transaction-list"></div>
+        </div>
+    </div>
+
+    <div class="bot-bubble-trigger" onclick="toggleChatbot()">🤖</div>
+    <div class="chat-container" id="chatbotUI">
+        <div class="chat-header">
+            <span>Troubleshooter Assistant</span>
+            <span style="cursor:pointer; font-size:16px;" onclick="toggleChatbot()">✕</span>
+        </div>
+        <div class="chat-logs" id="chatLogs">
+            <div class="msg bot">Hello! Main aapka AI Assistant hoon. Main aapke kharcho ka hisab jod sakta hoon! Mic daba kar poochein: "Mera kharcha kitna hai?" 😊</div>
+        </div>
+        <div class="chat-input-bar">
+            <button class="btn-mic" id="btnMic" onclick="startVoiceRecognition()">🎙️</button>
+            <input type="text" id="chatInputField" placeholder="Dikkat ya calculation yahan likhein...">
+            <button class="btn-bot-send" onclick="handleChatSubmit()">Send</button>
+        </div>
+    </div>
+
+    <div id="printModalContainer" class="modal-mask">
+        <div class="modal-window">
+            <div class="modal-bar">
+                <span style="font-size: 11px; font-weight: bold; color: #64748b;">WHITE SHEET REPORT VIEW</span>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="window.print()" class="print-btn-now">Print Now</button>
+                    <button onclick="closePrintModal()" class="print-btn-close">Close</button>
+                </div>
+            </div>
+            <div class="modal-body" id="printableLayout">
+                <div class="print-sheet">
+                    <div class="print-header">
+                        <div>
+                            <h1 style="font-size: 20px; font-weight: bold; margin-bottom: 4px; color: #000;">WALLET STATEMENT REPORT</h1>
+                            <p style="font-size: 11px; color: #555;">Report Date: <span id="printSheetDate">--</span></p>
+                        </div>
+                        <div class="text-right" style="font-size: 11px; color: #000;">
+                            <strong>Personal Expense Manager</strong><br>Verified Account Report Ledger
+                        </div>
+                    </div>
+                    <div class="print-summary-grid">
+                        <div><strong>INITIAL BASE/SALARY:</strong><br>₹<span id="printBaseBalance">25,000.00</span></div>
+                        <div><strong>TOTAL INFLOW (+):</strong><br>₹<span id="printTotalIncome">0.00</span></div>
+                        <div><strong>TOTAL OUTFLOW (-):</strong><br>₹<span id="printTotalExpense">0.00</span></div>
+                    </div>
+                    <div style="background: #000; color: #fff; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 20px;">
+                        <span>NET CLOSING BALANCE:</span>
+                        <span id="printNetBalance">₹25,000.00</span>
+                    </div>
+                    <table class="print-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th><th>Description</th><th>Category</th><th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="printTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+
+        let dynamicBaseBalance = parseFloat(localStorage.getItem('wallet_base_balance'));
+        if (isNaN(dynamicBaseBalance)) {
+            dynamicBaseBalance = 25000;
+            localStorage.setItem('wallet_base_balance', dynamicBaseBalance);
+        }
+        document.getElementById('txtBaseBalanceInput').value = dynamicBaseBalance;
+
+        let transactions = JSON.parse(localStorage.getItem('wallet_transactions'));
+        if (!transactions || !Array.isArray(transactions)) {
+            transactions = [];
+            localStorage.setItem('wallet_transactions', JSON.stringify(transactions));
+        }
+
+// YAHAN SE APNA BACHA HUA CODE CONTINUOUS PASTE KAREIN
+
+        const form = document.getElementById('expenseForm');
+        const ledgerContainer = document.getElementById('ledgerContainer');
+
+        let isEditing = false;
+        function toggleBalanceEdit() {
+            const displayDiv = document.getElementById('balanceDisplayDiv');
+            const editDiv = document.getElementById('balanceEditDiv');
+            const toggleBtn = document.getElementById('btnToggleBalance');
+            const inputField = document.getElementById('txtBaseBalanceInput');
+
+            if (!isEditing) {
+                displayDiv.classList.add('hidden');
+                editDiv.classList.remove('hidden');
+                toggleBtn.innerText = "Save/Apply";
+                isEditing = true;
+            } else {
+                let newVal = parseFloat(inputField.value);
+                if (!isNaN(newVal) && newVal >= 0) {
+                    dynamicBaseBalance = newVal;
+                    localStorage.setItem('wallet_base_balance', dynamicBaseBalance);
+                }
+                displayDiv.classList.remove('hidden');
+                editDiv.classList.add('hidden');
+                toggleBtn.innerText = "Change Salary/Base";
+                isEditing = false;
+                updateFinancials();
+            }
+        }
+
+        // Global variables for live stats calculation
+        let calcIncome = 0;
+        let calcExpense = 0;
+        let calcNet = 0;
+
+        function updateFinancials() {
+            calcIncome = 0; 
+            calcExpense = 0;
+            transactions.forEach(t => {
+                if (t.type === 'income') calcIncome += t.amount;
+                else calcExpense += t.amount;
+            });
+            calcNet = dynamicBaseBalance + calcIncome - calcExpense;
+
+            document.getElementById('lblBalance').innerText = calcNet.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            document.getElementById('lblIncome').innerText = calcIncome.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            document.getElementById('lblExpense').innerText = calcExpense.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        }
+
+        function renderLedger() {
+            ledgerContainer.innerHTML = '';
+            const sortedTx = [...transactions].reverse();
+
+            if (sortedTx.length === 0) {
+                ledgerContainer.innerHTML = `<div style="text-align: center; color:#94a3b8; padding: 40px 0; font-size: 13px;">Ledger is empty. Start creating entry row items!</div>`;
+                return;
+            }
+
+            sortedTx.forEach(tx => {
+                const item = document.createElement('div');
+                item.className = 'transaction-item';
+                const isInc = tx.type === 'income';
+                item.innerHTML = `
+                    <div class="item-details">
+                        <h4>${tx.title}</h4>
+                        <div class="item-meta"><span class="badge">${tx.category}</span> • <span>${tx.date}</span></div>
+                    </div>
+                    <div class="item-right">
+                        <span class="amount ${isInc?'amt-inc':'amt-exp'}">${isInc?'+':'-'}₹${tx.amount.toLocaleString('en-IN')}</span>
+                        <button class="btn-delete" onclick="deleteRecord(${tx.id})">✖</button>
+                    </div>`;
+                ledgerContainer.appendChild(item);
+            });
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newTx = {
+                id: Date.now(),
+                title: document.getElementById('txTitle').value.trim(),
+                amount: parseFloat(document.getElementById('txAmount').value),
+                type: document.getElementById('txType').value,
+                category: document.getElementById('txCategory').value,
+                date: document.getElementById('txDate').value
+            };
+            transactions.push(newTx);
+            localStorage.setItem('wallet_transactions', JSON.stringify(transactions));
+            updateFinancials();
+            renderLedger();
+            document.getElementById('txTitle').value = '';
+            document.getElementById('txAmount').value = '';
+            document.getElementById('txTitle').focus();
+        });
+
+        function deleteRecord(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            localStorage.setItem('wallet_transactions', JSON.stringify(transactions));
+            updateFinancials();
+            renderLedger();
+        }
+
+        function openPrintModal() {
+            updateFinancials();
+            document.getElementById('printBaseBalance').innerText = dynamicBaseBalance.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            document.getElementById('printTotalIncome').innerText = calcIncome.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            document.getElementById('printTotalExpense').innerText = calcExpense.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            document.getElementById('printNetBalance').innerText = '₹' + calcNet.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            document.getElementById('printSheetDate').innerText = new Date().toLocaleDateString('en-IN', {year: 'numeric', month: 'long', day: 'numeric'});
+
+            const printTableBody = document.getElementById('printTableBody');
+            printTableBody.innerHTML = '';
+            transactions.forEach(tx => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${tx.date}</td><td style="font-weight: bold;">${tx.title}</td><td>${tx.category}</td>
+                    <td class="text-right" style="font-weight: bold;">${tx.type==='income'?'+':'-'}₹${tx.amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>`;
+                printTableBody.appendChild(tr);
+            });
+            document.getElementById('printModalContainer').classList.add('active');
+        }
+
+        function closePrintModal() { document.getElementById('printModalContainer').classList.remove('active'); }
+
+        function toggleChatbot() {
+            document.getElementById('chatbotUI').classList.toggle('open');
+        }
+
+        function speakBotResponse(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'hi-IN';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // DYNAMIC AI ENGINE WITH REALTIME CALCULATION MATRIX
+        function getBotSolution(query) {
+            query = query.toLowerCase();
+            updateFinancials(); // Fetch latest mathematical values
+            
+            // Calculation Matrix Queries
+            if (query.includes('kharcha') || query.includes('expense') || query.includes('outflow') || query.includes('kitna udaya')) {
+                return `Bhai, aapka abhi tak ka kul kharcha ₹${calcExpense.toLocaleString('en-IN')} hai. thoda soch samajh kar kharch karo!`;
+            }
+            if (query.includes('balance') || query.includes('bacha') || query.includes('closing') || query.includes('paise bache')) {
+                return `Bhai, abhi aapke wallet mein kul ₹${calcNet.toLocaleString('en-IN')} bache hain.`;
+            }
+            if (query.includes('income') || query.includes('inflow') || query.includes('kamai') || query.includes('salary')) {
+                return `Bhai, aapki total base salary aur inflow mila kar kul kamai ₹${(dynamicBaseBalance + calcIncome).toLocaleString('en-IN')} hui hai.`;
+            }
+            
+            // Standard Troubleshooting Dialogs
+            if (query.includes('save') || query.includes('refresh') || query.includes('delete') || query.includes('gayab')) {
+                return "Bhai tension mat lo! Is manager mein maine LocalStorage data fit kiya hai. Page refresh ya back karne par bhi data browser memory mein safe rahega.";
+            }
+            if (query.includes('print') || query.includes('receipt') || query.includes('chap') || query.includes('white')) {
+                return "Bhai, print out nikalne ke liye top right corner par green rang ka 'Generate Print Out' button hai, us par click karke aap white sheet receipt print kar sakte hain.";
+            }
+            if (query.includes('hello') || query.includes('hi') || query.includes('assistant') || query.includes('kaun')) {
+                return "Namaste bhai! Main aapka custom expense manager calculation assistant hoon. Mere paas aapke pure budget ka live hisab hai. Bataiye kya janna hai?";
+            }
+            
+            return "Bhai, main aapki baat samajh raha hoon. Aap mujhse budget ki live calculation (jaise kharcha, income, bacha hua balance) ya page print/saving ke baare mein kuch bhi pooch sakte hain!";
+        }
+
+        function handleChatSubmit() {
+            const inputField = document.getElementById('chatInputField');
+            const text = inputField.value.trim();
+            if (!text) return;
+
+            appendChatMsg(text, 'user');
+            inputField.value = '';
+
+            setTimeout(() => {
+                let answer = getBotSolution(text);
+                appendChatMsg(answer, 'bot');
+                speakBotResponse(answer);
+            }, 500);
+        }
+
+        function appendChatMsg(text, sender) {
+            const logs = document.getElementById('chatLogs');
+            const d = document.createElement('div');
+            d.className = `msg ${sender}`;
+            d.innerText = text;
+            logs.appendChild(d);
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function startVoiceRecognition() {
+            const micBtn = document.getElementById('btnMic');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+// YAHAN SE APNA AAKHIRI BACHA HUA CODE CONTINUOUS PASTE KAREIN
+
+            if (!SpeechRecognition) {
+                alert("Bhai aapka browser voice recognition feature support nahi karta. Google Chrome use kijiye!");
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'hi-IN'; 
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = function() { micBtn.classList.add('listening'); };
+            recognition.onerror = function(e) { micBtn.classList.remove('listening'); };
+            recognition.onend = function() { micBtn.classList.remove('listening'); };
+
+            recognition.onresult = function(event) {
+                const voiceText = event.results.transcript;
+                appendChatMsg(voiceText, 'user');
+
+                setTimeout(() => {
+                    let answer = getBotSolution(voiceText);
+                    appendChatMsg(answer, 'bot');
+                    speakBotResponse(answer);
+                }, 500);
+            };
+
+            recognition.start();
+        }
+
+        updateFinancials();
+        renderLedger();
+    </script>
+</body>
+</html>
